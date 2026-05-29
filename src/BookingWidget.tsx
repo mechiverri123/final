@@ -12,11 +12,11 @@ const EMAILJS_PUBLIC_KEY = 'HRHZO34OJFxrK5DE0';
 // ───────────────────────────────────────────────────────────────────────────
 
 const SERVICES = [
-  { id: 'oil',        icon: '🛢️', name: 'Oil Change',  desc: 'Conventional or synthetic', duration: '30 min' },
-  { id: 'brakes',     icon: '🔧', name: 'Brakes',       desc: 'Pads, rotors, diagnostics',  duration: '2 hrs'  },
-  { id: 'diag',       icon: '💻', name: 'Diagnostics',  desc: 'Check engine & system scan', duration: '1 hr'   },
-  { id: 'suspension', icon: '🚗', name: 'Suspension',   desc: 'Shocks, struts, control arms', duration: '2–3 hrs' },
-  { id: 'full',       icon: '✅', name: 'Full Service', desc: 'Multi-point inspection',     duration: '1.5 hrs' },
+  { id: 'oil',        icon: '🛢️', name: 'Oil Change',  desc: 'Full synthetic only — your engine deserves it', duration: '30 min', startingAt: '$79.99*' },
+  { id: 'brakes',     icon: '🔧', name: 'Brakes',       desc: 'Pads, rotors, full brake service',              duration: '2 hrs',   startingAt: null },
+  { id: 'diag',       icon: '💻', name: 'Diagnostics',  desc: 'Check engine & system scan',                    duration: '1 hr',    startingAt: null },
+  { id: 'suspension', icon: '🚗', name: 'Suspension',   desc: 'Shocks, struts, control arms & more',           duration: '2–3 hrs', startingAt: null },
+  { id: 'full',       icon: '✅', name: 'Full Service', desc: 'Multi-point inspection',                        duration: '1.5 hrs', startingAt: null },
 ];
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -123,10 +123,12 @@ function updateLocalBooking(id: string, status: Booking['status']) {
 interface State {
   step: number; service: string | null; date: string | null;
   time: string | null; calYear: number; calMonth: number;
+  suspensionPart: string | null; brakeService: string | null;
 }
 const INIT_STATE: State = {
   step: 1, service: null, date: null, time: null,
   calYear: new Date().getFullYear(), calMonth: new Date().getMonth(),
+  suspensionPart: null, brakeService: null,
 };
 const INIT_FORM: FormData = { fname: '', lname: '', phone: '', email: '', vehicle: '', notes: '' };
 
@@ -153,7 +155,7 @@ export default function BookingWidget() {
     const dow = new Date(y, m, d).getDay();
     if (dow === 0) return false;
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    if (new Date(y, m, d) <= today) return false;
+    if (new Date(y, m, d) < today) return false;
     const k = dateKey(y, m, d);
     const taken = getLocalBookings().filter(b => b.date === k && b.status !== 'cancelled').length;
     return taken < TIME_SLOTS.length;
@@ -178,7 +180,13 @@ export default function BookingWidget() {
       id: `GG-${Date.now()}`,
       service: s.service, serviceIcon: svc.icon,
       date: s.date, time: s.time,
-      ...form, status: 'confirmed',
+      ...form,
+      notes: [
+        s.suspensionPart ? `Suspension part: ${s.suspensionPart.replace(/_/g, ' ')}` : '',
+        s.brakeService ? `Brake service: ${s.brakeService.replace(/_/g, ' ')}` : '',
+        form.notes,
+      ].filter(Boolean).join(' | '),
+      status: 'confirmed',
       createdAt: new Date().toISOString(),
     };
     saveLocalBooking(booking);
@@ -239,12 +247,52 @@ export default function BookingWidget() {
                       <div className="text-xl mb-2">{sv.icon}</div>
                       <div className="text-white text-sm font-bold mb-0.5">{sv.name}</div>
                       <div className="text-gray-500 text-xs leading-snug">{sv.desc}</div>
-                      <div className="text-red-500 text-xs font-bold mt-1">{sv.duration}</div>
+                      <div className="text-red-500 text-xs font-bold mt-1">{sv.startingAt ? `Starting at ${sv.startingAt}` : sv.duration}</div>
+                      {sv.startingAt && <div className="text-gray-600 text-xs">{sv.duration}</div>}
                     </button>
                   ))}
                 </div>
 
-                {/* Step 2 */}
+                {/* Suspension part dropdown */}
+                {s.service === 'suspension' && (
+                  <div className="mt-3">
+                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-wider mb-1.5">What are you looking to replace?</label>
+                    <select
+                      value={s.suspensionPart ?? ''}
+                      onChange={e => setS(p => ({ ...p, suspensionPart: e.target.value }))}
+                      className="w-full bg-gray-900 border border-gray-800 text-white text-sm px-3 py-2.5 outline-none focus:border-red-600 transition-colors">
+                      <option value="">Select a part...</option>
+                      <option value="shocks">Shocks</option>
+                      <option value="struts">Struts</option>
+                      <option value="control_arms">Control Arms</option>
+                      <option value="tie_rods">Tie Rods</option>
+                      <option value="cv_axles">CV Axles</option>
+                    </select>
+                    <p className="text-gray-600 text-xs mt-1">Pricing varies per vehicle — get a free estimate when you book!</p>
+                  </div>
+                )}
+
+                {/* Brakes service dropdown */}
+                {s.service === 'brakes' && (
+                  <div className="mt-3">
+                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-wider mb-1.5">What brake service do you need?</label>
+                    <select
+                      value={s.brakeService ?? ''}
+                      onChange={e => setS(p => ({ ...p, brakeService: e.target.value }))}
+                      className="w-full bg-gray-900 border border-gray-800 text-white text-sm px-3 py-2.5 outline-none focus:border-red-600 transition-colors">
+                      <option value="">Select a service...</option>
+                      <option value="pads">Brake Pads Only — Starting at $99</option>
+                      <option value="pads_rotors">Brake Pads + Rotors — Starting at $179</option>
+                      <option value="full">Full Service: Pads + Rotors + Fluid Flush &amp; Inspection — Starting at $229</option>
+                    </select>
+                    <p className="text-gray-600 text-xs mt-1">Pricing varies per vehicle — get a free estimate when you book!</p>
+                  </div>
+                )}
+
+                {/* Oil change note */}
+                {s.service === 'oil' && (
+                  <p className="text-gray-600 text-xs mt-2">*Mobile service fee included. Price may vary by vehicle. Full synthetic only.</p>
+                )}
                 {s.step >= 2 && (<>
                   <div className="border-t border-gray-800 my-6" />
                   <StepHeader n={2} current={s.step} label="Choose a Date" />

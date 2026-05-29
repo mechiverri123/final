@@ -6,10 +6,10 @@ const PHONE = '480-599-0118';
 const EMAIL = 'gidgarageaz@gmail.com';
 
 const services = [
-  { title: 'Oil Change', desc: 'Full-service oil and filter changes with quality conventional or synthetic oil.' },
-  { title: 'Brakes', desc: 'Pad replacement, rotor resurfacing, and complete brake system diagnostics.' },
+  { title: 'Oil Change', desc: "We only do full synthetic — because your engine deserves better than the bare minimum. Starting at $79.99* · Price may vary by vehicle." },
+  { title: 'Brakes', desc: 'Pad replacement, rotor resurfacing, and complete brake system diagnostics. Pricing varies per vehicle — get a free estimate when you book!' },
   { title: 'Diagnostics', desc: 'Computer diagnostics to identify and resolve check engine light issues.' },
-  { title: 'Suspension', desc: 'Shocks, struts, and control arms for a smooth, stable ride.' },
+  { title: 'Suspension', desc: 'Shocks, struts, control arms, tie rods, and CV axles. Pricing varies per vehicle — get a free estimate when you book!' },
   { title: 'Full Service', desc: 'Comprehensive multi-point inspection and maintenance.' },
 ];
 
@@ -193,6 +193,7 @@ function Footer() {
           <div>
             <img src="/website_logo.png" alt="GID Garage" className="h-16 w-auto mb-4" />
             <p className="text-white/70 text-sm max-w-xs leading-relaxed">Professional automotive repair and service in Arizona. Honest work. Fair prices.</p>
+            <p className="text-white/50 text-xs mt-2 leading-relaxed">Based in Gilbert, AZ · Serving Tempe, Phoenix, Mesa, Queen Creek &amp; Santan Valley</p>
           </div>
           <div className="flex flex-col gap-3">
             <a href={`tel:${PHONE}`} className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group">
